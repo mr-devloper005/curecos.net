@@ -8,6 +8,7 @@ import type { SitePost } from '@/lib/site-connector'
 import { EditableSiteShell } from '@/editable/shell/EditableSiteShell'
 import { EditableArticleComments } from '@/editable/components/EditableArticleComments'
 import { getTaskTheme, taskThemeStyle } from '@/editable/theme/task-themes'
+import { Ads } from '@/lib/ads'
 
 export const revalidate = 3
 
@@ -194,18 +195,40 @@ function ArticleDetail({ post, related, comments }: { post: SitePost; related: S
   const images = getImages(post)
   return (
     <>
-      <article className="mx-auto max-w-4xl px-6 py-14 sm:py-20">
-        <BackLink task="article" />
-        <p className="mt-10 text-xs font-medium uppercase tracking-[0.28em] text-[var(--tk-accent)]">{categoryOf(post, 'Article')}</p>
-        <h1 className="editable-display mt-5 text-balance text-4xl font-semibold leading-[1.06] tracking-[-0.03em] sm:text-5xl lg:text-[3.4rem]">{post.title}</h1>
-        <div className="mt-6 text-sm text-[var(--tk-muted)]">
-          <span>{SITE_CONFIG.name}</span>
-        </div>
-        {images[0] ? <img src={images[0]} alt="" className="mt-10 aspect-[16/9] w-full rounded-[var(--tk-radius)] border border-[var(--tk-line)] object-cover" /> : null}
-        <BodyContent post={post} />
-        <EditableArticleComments slug={post.slug} comments={comments} />
-      </article>
-      <RelatedStrip task="article" related={related} />
+      <section className="mx-auto grid max-w-[var(--editable-container)] gap-8 px-6 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-8">
+        <article className="min-w-0 bg-white p-5 shadow-[0_1px_0_rgba(107,63,105,0.18)] sm:p-8">
+          <BackLink task="article" />
+          <div className="mt-8 border-b border-[var(--tk-line)] pb-5">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--tk-accent)]">{categoryOf(post, 'Article')}</p>
+            <h1 className="editable-display mt-4 text-balance text-4xl font-semibold uppercase leading-[1.04] tracking-[-0.01em] sm:text-5xl">{post.title}</h1>
+            <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-[var(--tk-muted)]">
+              <span>by {SITE_CONFIG.name}</span>
+              <span className="h-1 w-1 rounded-full bg-[var(--tk-muted)]" />
+              <span>Published article</span>
+            </div>
+          </div>
+          {leadText(post) ? <p className="mt-6 text-lg leading-8 text-[var(--tk-muted)]">{leadText(post)}</p> : null}
+          {images[0] ? <img src={images[0]} alt="" className="mt-8 aspect-[16/9] w-full rounded-sm border border-[var(--tk-line)] object-cover" /> : null}
+          <DetailAd slot="in-feed" widthClass="max-w-[970px]" heightClass="min-h-[250px]" />
+          <BodyContent post={post} />
+          <DetailAd slot="article-bottom" widthClass="max-w-[728px]" heightClass="min-h-[90px]" />
+          <EditableArticleComments slug={post.slug} comments={comments} />
+        </article>
+        <aside className="min-w-0 space-y-6 lg:sticky lg:top-48 lg:self-start">
+          <div className="rounded-sm border border-[var(--tk-line)] bg-white p-5">
+            <h2 className="editable-display border-b border-[var(--tk-line)] pb-3 text-2xl font-semibold uppercase">Related Articles</h2>
+            <div className="mt-2 grid gap-0">
+              {related.length ? related.map((item) => <RelatedCard key={item.id || item.slug} task="article" post={item} />) : <p className="py-4 text-sm text-[var(--tk-muted)]">More articles will appear here soon.</p>}
+            </div>
+          </div>
+          <div className="rounded-sm border border-[var(--tk-line)] bg-[#f4e9f2] p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--tk-accent)]">Keep exploring</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--tk-muted)]">Browse recent articles, listings and profiles from the community.</p>
+            <Link href="/article" className="mt-4 inline-flex items-center gap-2 rounded-sm bg-[var(--tk-accent)] px-4 py-2 text-sm font-bold text-white">More articles <ArrowUpRight className="h-4 w-4" /></Link>
+          </div>
+        </aside>
+      </section>
+      <DetailAd slot="footer" widthClass="max-w-[970px]" heightClass="min-h-[90px]" className="pb-12" />
     </>
   )
 }
@@ -220,33 +243,38 @@ function ListingDetail({ post, related }: { post: SitePost; related: SitePost[] 
   const website = getField(post, ['website', 'url'])
   const mapSrc = mapSrcFor(post)
   return (
-    <section className="mx-auto max-w-[var(--editable-container)] px-6 py-14 sm:py-20 lg:px-8">
-      <BackLink task="listing" />
-      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <article className="min-w-0">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-[var(--tk-radius)] border border-[var(--tk-line)] bg-[var(--tk-raised)]">
-              {logo ? <img src={logo} alt="" className="h-full w-full object-cover" /> : <Building2 className="h-12 w-12 text-[var(--tk-muted)]" />}
+    <>
+      <section className="mx-auto max-w-[var(--editable-container)] px-6 py-14 sm:py-20 lg:px-8">
+        <BackLink task="listing" />
+        <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <article className="min-w-0">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+              <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-[var(--tk-radius)] border border-[var(--tk-line)] bg-[var(--tk-raised)]">
+                {logo ? <img src={logo} alt="" className="h-full w-full object-cover" /> : <Building2 className="h-12 w-12 text-[var(--tk-muted)]" />}
+              </div>
+              <div className="min-w-0">
+                <Kicker task="listing">Business listing</Kicker>
+                <h1 className="editable-display mt-4 text-4xl font-semibold leading-[1.04] tracking-[-0.03em] sm:text-5xl">{post.title}</h1>
+                <DetailMeta post={post} category={getField(post, ['category'])} />
+              </div>
             </div>
-            <div className="min-w-0">
-              <Kicker task="listing">Business listing</Kicker>
-              <h1 className="editable-display mt-4 text-4xl font-semibold leading-[1.04] tracking-[-0.03em] sm:text-5xl">{post.title}</h1>
-              <DetailMeta post={post} category={getField(post, ['category'])} />
-            </div>
-          </div>
-          {leadText(post) ? <p className="mt-7 max-w-2xl text-lg leading-8 text-[var(--tk-muted)]">{leadText(post)}</p> : null}
-          <InfoGrid items={[['Location', address, MapPin], ['Phone', phone, Phone], ['Email', email, Mail], ['Website', website, Globe2]]} />
-          <Divider />
-          <BodyContent post={post} />
-          <ImageStrip images={images.slice(1)} label="Showcase" />
-        </article>
-        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-          {mapSrc ? <MapBox src={mapSrc} label={address || post.title} /> : null}
-          <ContactAction website={website} phone={phone} email={email} />
-          <RelatedPanel task="listing" post={post} related={related} />
-        </aside>
-      </div>
-    </section>
+            {leadText(post) ? <p className="mt-7 max-w-2xl text-lg leading-8 text-[var(--tk-muted)]">{leadText(post)}</p> : null}
+            <InfoGrid items={[['Location', address, MapPin], ['Phone', phone, Phone], ['Email', email, Mail], ['Website', website, Globe2]]} />
+            <DetailAd slot="in-feed" widthClass="max-w-[970px]" heightClass="min-h-[250px]" />
+            <Divider />
+            <BodyContent post={post} />
+            <DetailAd slot="article-bottom" widthClass="max-w-[728px]" heightClass="min-h-[90px]" />
+            <ImageStrip images={images.slice(1)} label="Showcase" />
+          </article>
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+            {mapSrc ? <MapBox src={mapSrc} label={address || post.title} /> : null}
+            <ContactAction website={website} phone={phone} email={email} />
+            <RelatedPanel task="listing" post={post} related={related} />
+          </aside>
+        </div>
+      </section>
+      <DetailAd slot="footer" widthClass="max-w-[970px]" heightClass="min-h-[90px]" className="pb-12" />
+    </>
   )
 }
 
@@ -418,6 +446,14 @@ function ProfileDetail({ post, related }: { post: SitePost; related: SitePost[] 
 }
 
 // ----- Shared building blocks -----
+function DetailAd({ slot, widthClass, heightClass, className = '' }: { slot: string; widthClass: string; heightClass: string; className?: string }) {
+  return (
+    <div className={`mx-auto w-full px-0 py-6 ${widthClass} ${className}`}>
+      <Ads slot={slot} showLabel eager className={`mx-auto w-full ${heightClass}`} />
+    </div>
+  )
+}
+
 function Divider() {
   return <div className="my-10 h-px bg-[var(--tk-line)]" />
 }
@@ -567,4 +603,3 @@ function RelatedCard({ task, post, grid = false }: { task: TaskKey; post: SitePo
     </Link>
   )
 }
-
